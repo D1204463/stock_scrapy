@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>輸入股票資料</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+<h1>輸入股票資料</h1>
+<form id="stockForm">
+  <label for="target">標的:</label>
+  <input type="text" id="target" name="target" required><br><br>
+
+  <label for="date">日期:</label>
+  <input type="date" id="date" name="date" required><br><br>
+
+  <label for="closingPrice">收盤價:</label>
+  <input type="number" step="0.01" id="closingPrice" name="closingPrice" required><br><br>
+
+  <button type="button" onclick="submitForm()">提交</button>
+</form>
+
+<h2>股票資料</h2>
+<table>
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>標的</th>
+    <th>日期</th>
+    <th>收盤價</th>
+  </tr>
+  </thead>
+  <tbody id="stockData">
+  <!-- 股票資料將在此顯示 -->
+  </tbody>
+</table>
+
+<script>
+  function fetchStockData() {
+    fetch('/api/stock_data')
+            .then(response => response.json())
+            .then(data => {
+              const stockDataElement = document.getElementById('stockData');
+              stockDataElement.innerHTML = '';
+              data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+              <td>${row.id}</td>
+              <td>${row.target}</td>
+              <td>${row.date}</td>
+              <td>${row.closing_price}</td>
+            `;
+                stockDataElement.appendChild(tr);
+              });
+            })
+            .catch(error => console.error('Error fetching stock data:', error));
+  }
+
+  function submitForm() {
+    const target = document.getElementById('target').value;
+    const date = document.getElementById('date').value;
+    const closingPrice = document.getElementById('closingPrice').value;
+
+    const data = {
+      target: target,
+      date: date,
+      closingPrice: closingPrice
+    };
+
+    fetch('/api/stock_data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+            .then(response => response.json())
+            .then(data => {
+              alert('資料提交成功！');
+              fetchStockData(); // 提交後重新獲取股票數據
+              console.log('Success:', data);
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+            });
+  }
+
+  // 頁面加載完成後獲取股票數據
+  window.onload = fetchStockData;
+</script>
+</body>
+</html>
